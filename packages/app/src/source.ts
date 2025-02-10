@@ -7,7 +7,7 @@ import {
   filterColumnMetaByType,
   JSDataType,
 } from '@hyperdx/common-utils/dist/clickhouse';
-import { TSource } from '@hyperdx/common-utils/dist/types';
+import { MetricKind, TSource } from '@hyperdx/common-utils/dist/types';
 import { hashCode } from '@hyperdx/common-utils/dist/utils';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
@@ -242,16 +242,27 @@ export async function inferTableSourceConfig({
     'StatusMessage',
   ]);
 
-  const isOtelMetricSchema = hasAllColumns(columns, [
+  const isOtelMetricGaugeSchema = hasAllColumns(columns, [
     'TimeUnix',
     'MetricName',
-    'MetricDescription',
     'MetricUnit',
     'Value',
     'Flags',
-    'ResourceAttributes',
     'Attributes',
     'ResourceAttributes',
+  ]);
+
+  const isOtelMetricHistogramSchema = hasAllColumns(columns, [
+    'TimeUnix',
+    'MetricName',
+    'MetricUnit',
+    'Flags',
+    'Attributes',
+    'ResourceAttributes',
+    'BucketCounts',
+    'ExplicitBounds',
+    'Min',
+    'Max',
   ]);
 
   const timestampColumns = filterColumnMetaByType(columns, [JSDataType.Date]);
@@ -309,8 +320,9 @@ export async function inferTableSourceConfig({
           statusMessageExpression: 'StatusMessage',
         }
       : {}),
-    ...(isOtelMetricSchema
+    ...(isOtelMetricGaugeSchema
       ? {
+          metricDiscriminator: MetricKind.Gauge,
           serviceNameExpression: 'ServiceName',
           timestampValueExpression: 'TimeUnix',
           defaultTableSelectExpression:
@@ -319,6 +331,25 @@ export async function inferTableSourceConfig({
           metricUnitExpression: 'MetricUnit',
           flagsExpression: 'Flags',
           valueExpression: 'Value',
+          eventAttributesExpression: 'Attributes',
+          resourceAttributesExpression: 'ResourceAttributes',
+        }
+      : {}),
+    ...(isOtelMetricHistogramSchema
+      ? {
+          metricDiscriminator: MetricKind.Histogram,
+          serviceNameExpression: 'ServiceName',
+          timestampValueExpression: 'TimeUnix',
+          defaultTableSelectExpression:
+            'TimeUnix, ServiceName, MetricName, Value, Attributes',
+          metricNameExpression: 'MetricName',
+          metricUnitExpression: 'MetricUnit',
+          flagsExpression: 'Flags',
+          sumExpression: 'Sum',
+          bucketCountsExpression: 'BucketCounts',
+          explicitBoundsExpression: 'ExplicitBounds',
+          minExpression: 'Min',
+          maxExpression: 'Max',
           eventAttributesExpression: 'Attributes',
           resourceAttributesExpression: 'ResourceAttributes',
         }

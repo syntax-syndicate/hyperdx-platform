@@ -389,6 +389,11 @@ export const ConnectionSchema = z.object({
   password: z.string().optional(),
 });
 
+export enum MetricKind {
+  Gauge = 'gauge',
+  Histogram = 'histogram',
+}
+
 // --------------------------
 // TABLE SOURCES
 // --------------------------
@@ -398,6 +403,7 @@ export enum SourceKind {
   Session = 'session',
   Metric = 'metric',
 }
+
 export const SourceSchema = z.object({
   from: z.object({
     databaseName: z.string(),
@@ -443,13 +449,20 @@ export const SourceSchema = z.object({
   logSourceId: z.string().optional(),
 
   // Common Metric Fields
-  metricDiscriminator: z.enum(['gauge']).optional(),
+  metricDiscriminator: z.nativeEnum(MetricKind).optional(),
   metricNameExpression: z.string().optional(),
   metricUnitExpression: z.string().optional(),
   flagsExpression: z.string().optional(),
 
   // Gauge Metric Field
   valueExpression: z.string().optional(),
+
+  // Histogram Metric Fields
+  sumExpression: z.string().optional(),
+  bucketCountsExpression: z.string().optional(),
+  explicitBoundsExpression: z.string().optional(),
+  minExpression: z.string().optional(),
+  maxExpression: z.string().optional(),
 });
 
 export type TSource = z.infer<typeof SourceSchema>;

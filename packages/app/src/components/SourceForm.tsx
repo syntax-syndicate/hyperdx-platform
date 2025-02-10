@@ -6,7 +6,11 @@ import {
   UseFormSetValue,
   UseFormWatch,
 } from 'react-hook-form';
-import { SourceKind, TSource } from '@hyperdx/common-utils/dist/types';
+import {
+  MetricKind,
+  SourceKind,
+  TSource,
+} from '@hyperdx/common-utils/dist/types';
 import {
   Anchor,
   Box,
@@ -15,9 +19,9 @@ import {
   Flex,
   Group,
   Menu,
+  MultiSelect,
   Radio,
   SegmentedControl,
-  Select,
   Slider,
   Stack,
   Switch,
@@ -43,6 +47,7 @@ import { ConnectionSelectControlled } from './ConnectionSelect';
 import { DatabaseSelectControlled } from './DatabaseSelect';
 import { DBTableSelectControlled } from './DBTableSelect';
 import { InputControlled } from './InputControlled';
+import SelectControlled from './SelectControlled';
 import { SQLInlineEditorControlled } from './SQLInlineEditor';
 
 const DEFAULT_DATABASE = 'default';
@@ -565,15 +570,28 @@ export function MetricTableModelForm({
             name={`from.databaseName`}
           />
         </FormRow>
-        <Divider />
-        <FormRow label={'Metric Type'}>
-          <Select
-            data={[{ value: 'gauge', label: 'Gauge' }]}
-            defaultValue="gauge"
+        <FormRow label={'Metric Type(s)'}>
+          <MultiSelect
+            data={[
+              { value: MetricKind.Gauge, label: 'Gauge' },
+              { value: MetricKind.Histogram, label: 'Histogram' },
+            ]}
+            defaultValue={[]}
+            placeholder="Select metric type(s)"
+          />
+          {/* <SelectControlled
+            control={control}
+            name="metricDiscriminator"
+            data={[
+              { value: MetricKind.Gauge, label: 'Gauge' },
+              { value: MetricKind.Histogram, label: 'Histogram' },
+            ]}
+            defaultValue={MetricKind.Gauge}
             placeholder="Select metric type"
             allowDeselect={false}
-          />
+          /> */}
         </FormRow>
+        <Divider />
         <FormRow label={'Table'}>
           <DBTableSelectControlled
             connectionId={connectionId}
@@ -620,16 +638,72 @@ export function MetricTableModelForm({
             placeholder="MetricName"
           />
         </FormRow>
-        <FormRow label={'Gauge Value Column'}>
-          <SQLInlineEditorControlled
-            connectionId={connectionId}
-            database={databaseName}
-            table={tableName}
-            control={control}
-            name="valueExpression"
-            placeholder="Value"
-          />
-        </FormRow>
+        {watch('metricDiscriminator') === MetricKind.Gauge && (
+          <FormRow label={'Gauge Value Column'}>
+            <SQLInlineEditorControlled
+              connectionId={connectionId}
+              database={databaseName}
+              table={tableName}
+              control={control}
+              name="valueExpression"
+              placeholder="Value"
+            />
+          </FormRow>
+        )}
+        {watch('metricDiscriminator') === MetricKind.Histogram && (
+          <>
+            <FormRow label={'Sum Column'}>
+              <SQLInlineEditorControlled
+                connectionId={connectionId}
+                database={databaseName}
+                table={tableName}
+                control={control}
+                name="sumExpression"
+                placeholder="Sum"
+              />
+            </FormRow>
+            <FormRow label={'Bucket Counts Column'}>
+              <SQLInlineEditorControlled
+                connectionId={connectionId}
+                database={databaseName}
+                table={tableName}
+                control={control}
+                name="bucketCountsExpression"
+                placeholder="BucketCounts"
+              />
+            </FormRow>
+            <FormRow label={'Explicit Bounds Column'}>
+              <SQLInlineEditorControlled
+                connectionId={connectionId}
+                database={databaseName}
+                table={tableName}
+                control={control}
+                name="explicitBoundsExpression"
+                placeholder="ExplicitBounds"
+              />
+            </FormRow>
+            <FormRow label={'Min Value Column'}>
+              <SQLInlineEditorControlled
+                connectionId={connectionId}
+                database={databaseName}
+                table={tableName}
+                control={control}
+                name="minExpression"
+                placeholder="Min"
+              />
+            </FormRow>
+            <FormRow label={'Max Value Column'}>
+              <SQLInlineEditorControlled
+                connectionId={connectionId}
+                database={databaseName}
+                table={tableName}
+                control={control}
+                name="maxExpression"
+                placeholder="Max"
+              />
+            </FormRow>
+          </>
+        )}
         <Box>
           {!showOptionalFields && (
             <Anchor
