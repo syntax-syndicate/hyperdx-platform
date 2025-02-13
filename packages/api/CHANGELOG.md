@@ -1,5 +1,16 @@
 # @hyperdx/api
 
+## 2.0.0-beta.11
+
+### Minor Changes
+
+- 759da7a: Support multiple OTEL metric types in source configuration setup.
+
+### Patch Changes
+
+- Updated dependencies [759da7a]
+  - @hyperdx/common-utils@0.2.0-beta.0
+
 ## 2.0.0-beta.10
 
 ### Patch Changes
